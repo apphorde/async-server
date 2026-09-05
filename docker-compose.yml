@@ -1,0 +1,20 @@
+services:
+  storage-reader:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - storage-reader-data:/data
+    environment:
+      # Set true only when the container is behind HTTPS and SECURE_COOKIES=true.
+      ALLOW_REGISTRATION: "false"
+      SECURE_COOKIES: "false"
+      MAX_UPLOAD_BYTES: "2147483648"
+      STORAGE_BACKEND: filebin
+      FILEBIN_URL: ${FILEBIN_URL:-https://file.api.apphor.de}
+      FILEBIN_ID: ${FILEBIN_ID:?set FILEBIN_ID in .env}
+      FILEBIN_PASSWORD: ${FILEBIN_PASSWORD:?set FILEBIN_PASSWORD in .env}
+    restart: unless-stopped
+
+volumes:
+  storage-reader-data:
