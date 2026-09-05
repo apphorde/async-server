@@ -8,13 +8,38 @@ Passwords must be 12 to 72 UTF-8 bytes because the server uses bcrypt. A normal 
 
 ## Container image
 
-Build the image with the `server` directory as its build context:
+Build and push the image from this repository:
 
 ```sh
-docker build -t reader-vault:latest .
+docker build -t ghcr.io/apphorde/async-server:latest .
+docker push ghcr.io/apphorde/async-server:latest
 ```
 
 The image contains no FileBin credentials. Provide `STORAGE_BACKEND=filebin`, `FILEBIN_URL`, `FILEBIN_ID`, and `FILEBIN_PASSWORD` only as deployment-time environment variables. Mount a persistent writable volume at `/data`; it contains local upload staging and the single-node metadata database. The process runs as UID `10001`. `/healthz` is an unauthenticated container health endpoint and returns `204` when the service is running.
+
+Example runtime configuration:
+
+```sh
+docker run -d \
+  --name async-server \
+  --restart unless-stopped \
+  -p 8080:8080 \
+  -v async-server-data:/data \
+  -e STORAGE_BACKEND=filebin \
+  -e FILEBIN_URL=https://file.api.apphor.de \
+  -e FILEBIN_ID \
+  -e FILEBIN_PASSWORD \
+  -e SECURE_COOKIES=true \
+  ghcr.io/apphorde/async-server:latest
+```
+
+The `FILEBIN_ID` and `FILEBIN_PASSWORD` variables in this example are read from the deployment environment; they are not written into the image or command line. Put the container behind HTTPS before setting `SECURE_COOKIES=true`. Configure the reverse proxy to forward requests to port `8080` and use `/healthz` for its health check.
+
+For Compose, copy `.env.example` to `.env`, set the FileBin values, and run:
+
+```sh
+docker compose up -d
+```
 
 ## Android upload flow
 
